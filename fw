@@ -1,0 +1,71 @@
+#!/bin/bash
+. /lib/lsb/init-functions
+
+## functions
+start() {
+
+                        
+	iptables -t filter -F
+	iptables -t filter -X
+	iptables -t nat -F
+	iptables -t nat -X
+	iptables -t mangle -F
+	iptables -t mangle -X
+	iptables -P INPUT DROP
+
+	iptables -A INPUT -i lo -j ACCEPT
+                                                                
+	#libera conexoes estabelecidas anteriormente
+	iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+	#temporiza X tentativas por minuto SSH
+	iptables -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --set --name SSH
+	iptables -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --update --seconds 120 --hitcount 4 --rttl --name SSH -j LOG --log-prefix "SSH_PROTEC " --log-level info
+	iptables -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --update --seconds 120 --hitcount 4 --rttl --name SSH -j DROP
+        iptables -A INPUT -p icmp -j ACCEPT
+	iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+	iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+	iptables -A INPUT -p tcp --dport 443 -j ACCEPT	
+	iptables -A INPUT -p tcp --dport 8080 -j ACCEPT	
+	
+exit 0                                                                                          	
+        
+	
+}
+
+stop(){
+	iptables -t filter -F
+	iptables -t filter -X
+	iptables -t nat -F
+	iptables -t nat -X
+	iptables -t mangle -F
+	iptables -t mangle -X
+	iptables -P INPUT ACCEPT
+
+}
+
+
+### selection
+
+case "$1" in
+	"start") 
+  	  log_daemon_msg "Iniciando Firewall - by Megatek" 	  
+	  start
+	  log_end_msg 0
+	;;
+	"stop")
+	  log_daemon_msg "Finalizando Firewall - by Megatek"  
+	  stop
+	  log_end_msg 0
+	;;
+	"restart") 
+	  stop
+	  start
+	;;	
+	*) 
+	  echo "use os parametros start ou stop"
+	  stop
+	  start
+        	  
+esac
+exit 0

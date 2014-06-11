@@ -1,0 +1,9 @@
+#!/bin/bash
+
+apt-get install lamp-server^
+apt-get install phpmyadmin
+apt-get install nginx
+apt-get install apache2-mpm-itk
+a2enmod rewrite
+a2enmod deflate
+a2enmod deflate
